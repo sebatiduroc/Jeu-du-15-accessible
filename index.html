@@ -11,11 +11,6 @@
 <meta name="apple-mobile-web-app-title" content="Jeu du 15">
 <link rel="apple-touch-icon" href="pwa-icons/icon-192.png">
 <style>
-/* ══════════════════════════════════════════════════
-   ACCESSIBILITÉ : sans serif, pas d'italique,
-   fond noir pur, texte blanc / jaune d'or,
-   contrastes WCAG AA minimum 4.5:1
-══════════════════════════════════════════════════ */
 :root {
   --bg:        #000000;
   --bg2:       #111111;
@@ -302,7 +297,7 @@ body{
 <!-- Leaderboard overlay -->
 <div class="overlay" id="lbOverlay">
   <div class="ovc">
-    <div class="lb-title">🏆 Classement</div>
+    <div class="lb-title">🏆 Records des 30 derniers jours</div>
     <div class="lb-list" id="lbList"></div>
     <div class="lb-footer">
       <button class="btn-ok" onclick="closeLb()">Fermer</button>
@@ -320,6 +315,9 @@ const JSONBIN_BIN_ID  = '69aca1ec43b1c97be9bee075';
 const JSONBIN_API_KEY = '$2a$10$KF8MxpCoz7EiaFpfywvUvel.9yrVRPB.gl670nIVTkj1qJ7MtVor6';
 const JSONBIN_URL     = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 const JSONBIN_CONFIGURED = JSONBIN_BIN_ID !== 'VOTRE_BIN_ID_ICI';
+
+// Durée de rétention des scores : 30 jours en millisecondes
+const SCORE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 // ════════════════════════════════════════════════
 const WORDS = ["ZERO","UN","DEUX","TROIS","QUATRE","CINQ","SIX","SEPT",
@@ -515,6 +513,16 @@ function setLocalBest(obj) {
   try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); } catch(e) {}
 }
 
+// Retourne les scores récents (moins de 30 jours) depuis JSONBin
+async function loadScores() {
+  const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
+  const data = await res.json();
+  const scores = data.record?.scores ?? [];
+  const cutoff = Date.now() - SCORE_RETENTION_MS;
+  return scores.filter(r => r.ts && r.ts >= cutoff);
+}
+
+// Appelée à chaque amélioration de score pendant la partie
 async function maybeSubmitToJsonbin(score) {
   const pseudo = getPseudo();
   if (!pseudo || !JSONBIN_CONFIGURED) return;
@@ -531,25 +539,27 @@ async function maybeSubmitToJsonbin(score) {
   try {
     const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
     const data = await res.json();
-    const scores = data.record?.scores ?? [];
-    const sorted = [...scores].sort((a,b) => b.score - a.score);
+    const allScores = data.record?.scores ?? [];
+
+    // Purger les scores de plus de 30 jours
+    const cutoff = Date.now() - SCORE_RETENTION_MS;
+    const fresh = allScores.filter(r => r.ts && r.ts >= cutoff);
+
+    // Soumettre uniquement si meilleur que le 5e score du classement récent
+    const sorted = [...fresh].sort((a,b) => b.score - a.score);
     const lowestTop = sorted.length < 5 ? 0 : sorted[4].score;
     if (score <= lowestTop) return;
-    scores.push(entry);
-    scores.sort((a,b) => b.score - a.score || a.ts - b.ts);
-    scores.splice(5);
+
+    fresh.push(entry);
+    fresh.sort((a,b) => b.score - a.score || a.ts - b.ts);
+    fresh.splice(5);
+
     await fetch(JSONBIN_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
-      body: JSON.stringify({ scores })
+      body: JSON.stringify({ scores: fresh })
     });
   } catch(e) { console.error('Leaderboard error:', e); }
-}
-
-async function loadScores() {
-  const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
-  const data = await res.json();
-  return data.record?.scores ?? [];
 }
 
 // ════════════════════════════════════════════════
