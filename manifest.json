@@ -1,21 +1,24 @@
 {
-  "name": "Le Jeu du 15",
-  "short_name": "Jeu du 15",
-  "description": "Le Jeu du 15 : attribuez une valeur entière à chaque lettre de l'alphabet pour que la somme des lettres de chaque mot soit égale au nombre qu'il représente, de ZÉRO à QUINZE.",
-  "start_url": "/Jeu-du-15/jeu-du-15-accessible.html",
-  "scope": "/Jeu-du-15/",
-  "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#000000",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Le Jeu du 15",
+  "orientation": "portrait",
+  "scope": "/Jeu-du-15/",
+  "short_name": "Jeu15",
+  "start_url": "/Jeu-du-15/jeu-du-15-accessible.html",
   "theme_color": "#ffd700",
+  "id": "Jeu du 15",
+  "description": "Le Jeu du 15 : attribuez une valeur entière à chaque lettre de l'alphabet pour que la somme des lettres de chaque mot soit égale au nombre qu'il représente, de ZÉRO à QUINZE.\nLe jeu est adapté aux personnes malvoyantes, avec des contrastes élevés, et des polices agrandies.",
   "lang": "fr",
-  "categories": ["games", "puzzle"],
-  "icons": [
-    { "src": "pwa-icons/icon-48.png",  "sizes": "48x48",   "type": "image/png", "purpose": "any" },
-    { "src": "pwa-icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
-    { "src": "pwa-icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
-    { "src": "pwa-icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "pwa-icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "pwa-icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ]
+  "prefer_related_applications": false,
+  "categories": [
+    "education",
+    "entertainment",
+    "games",
+    "kids"
+  ],
+  "share_target": {
+    "method": "GET"
+  }
 }
