@@ -51,5 +51,42 @@
     "type": "image/png",
     "purpose": "any maskable"
   }
+],
+"screenshots": [
+  {
+    "src": "./1.jpg",
+    "sizes": "1080x2392",
+    "type": "image/png",
+    "form_factor": "narrow",
+    "label": "Un score déjà pas mal !"
+  },
+  {
+    "src": "./2.jpg",
+    "sizes": "1080x2392",
+    "type": "image/png",
+    "form_factor": "narrow",
+    "label": "Le début"
+  },
+  {
+    "src": "./3.jpg",
+    "sizes": "1080x2392",
+    "type": "image/png",
+    "form_factor": "narrow",
+    "label": "Système de scores mondial"
+  },
+  {
+    "src": "./4.jpg",
+    "sizes": "1080x2392",
+    "type": "image/png",
+    "form_factor": "narrow",
+    "label": "Partage du score"
+  },
+  {
+    "src": "./5.jpg",
+    "sizes": "1080x2392",
+    "type": "image/png",
+    "form_factor": "narrow",
+    "label": "Des règles simples"
+  }
 ]
 }
