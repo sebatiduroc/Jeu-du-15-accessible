@@ -1,13 +1,12 @@
 // Service Worker — Le Jeu du 15
 const CACHE = 'jeu15-v1';
 const ASSETS = [
-  '/Jeu-du-15/',
-  '/Jeu-du-15/jeu-du-15-accessible.html',
-  '/Jeu-du-15/manifest.json',
-  '/Jeu-du-15/pwa-icons/icon-192.png',
-  '/Jeu-du-15/pwa-icons/icon-512.png',
+  '/Jeu-du-15-accessible/',
+  '/Jeu-du-15-accessible/index.html',
+  '/Jeu-du-15-accessible/manifest.json',
+  '/Jeu-du-15-accessible/pwa-icons/android/android-launchscreen-192x192.png',
+  '/Jeu-du-15-accessible/pwa-icons/android/android-launchscreen-512x512.png',
 ];
-
 // Installation : mise en cache des ressources essentielles
 self.addEventListener('install', e => {
   e.waitUntil(
