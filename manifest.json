@@ -1,7 +1,7 @@
 {
   "name": "Le Jeu du 15",
   "short_name": "Jeu du 15",
-  "description": "Attribuez des valeurs aux lettres pour que chaque mot soit égal au nombre qu'il représente.",
+  "description": "Le Jeu du 15 : attribuez une valeur entière à chaque lettre de l'alphabet pour que la somme des lettres de chaque mot soit égale au nombre qu'il représente, de ZÉRO à QUINZE.",
   "start_url": "/Jeu-du-15/jeu-du-15-accessible.html",
   "scope": "/Jeu-du-15/",
   "display": "standalone",
