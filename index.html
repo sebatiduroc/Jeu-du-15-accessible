@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Le Jeu du 15 — Version accessible</title>
+<style>
+/* ══════════════════════════════════════════════════
+   ACCESSIBILITÉ : sans serif, pas d'italique,
+   fond noir pur, texte blanc / jaune d'or,
+   contrastes WCAG AA minimum 4.5:1
+══════════════════════════════════════════════════ */
+:root {
+  --bg:        #000000;
+  --bg2:       #111111;
+  --bg3:       #1a1a1a;
+  --white:     #ffffff;
+  --dim:       #cccccc;
+  --gold:      #ffd700;
+  --gold-dim:  #b89a00;
+  --green:     #00e676;
+  --red:       #ff5252;
+  --border:    #444444;
+  --border-hi: #ffd700;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:var(--bg);
+  font-family:Arial,Helvetica,sans-serif;
+  display:flex;flex-direction:column;
+  height:100dvh;
+  user-select:none;
+  color:var(--white);
+}
+
+/* ── HEADER ── */
+.header{
+  background:var(--bg2);
+  padding:6px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+  border-bottom:2px solid var(--border);
+  gap:8px;
+}
+.header h1{
+  font-size:1.15rem;font-weight:700;color:var(--white);
+  letter-spacing:.03em;flex-shrink:0;cursor:pointer;
+}
+.header h1:hover{color:var(--gold);}
+.score-block{
+  display:flex;flex-direction:column;align-items:center;
+  background:#1a1500;border:2px solid var(--gold);
+  border-radius:6px;padding:2px 12px 2px;flex-shrink:0;min-width:64px;
+}
+.score-block .lbl{font-size:.7rem;font-weight:700;color:var(--gold-dim);line-height:1;letter-spacing:.1em;}
+.score-block .val{font-size:2.2rem;font-weight:700;line-height:1.1;color:var(--gold);}
+.hdr-btns{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.hbtn{
+  background:var(--bg3);border:2px solid var(--border);border-radius:5px;
+  color:var(--dim);font-size:1rem;width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .12s;padding:0;font-family:Arial,sans-serif;
+}
+.hbtn:active,.hbtn:focus{outline:2px solid var(--gold);background:#222;}
+.hbtn.rst{border-color:#883333;color:#ff8080;}
+.hbtn.rst:active{border-color:var(--red);color:var(--red);background:#330000;}
+.hbtn.share{border-color:#335588;color:#88aaff;}
+.hbtn.share:active{border-color:#88aaff;background:#001133;}
+.hbtn.lb{border-color:var(--gold-dim);color:var(--gold);}
+.hbtn.lb:active{border-color:var(--gold);background:#1a1500;}
+
+/* ── BOARD ── */
+.board{
+  flex:1;background:var(--bg);display:flex;flex-direction:column;
+  overflow:hidden;position:relative;padding:6px 8px;gap:6px;
+}
+
+/* ── 4×4 NUMBER GRID ── */
+.nums-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;flex-shrink:0;}
+.nc{
+  background:var(--bg2);border:2px solid var(--border);
+  border-radius:5px;padding:4px 3px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:border-color .15s,background .15s;
+  position:relative;min-height:48px;
+}
+.nc:active{background:#222;}
+.nc.active {background:#1a1500;border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);}
+.nc.solved {background:#001a08;border-color:var(--green);}
+.nc.solved.active{background:#002a10;border-color:var(--green);box-shadow:0 0 0 2px var(--green);}
+.nc-d{font-size:1.3rem;font-weight:700;line-height:1;color:var(--dim);}
+.nc-w{font-size:.58rem;font-weight:700;color:#777;white-space:nowrap;margin-top:2px;letter-spacing:.04em;}
+.nc-ck{position:absolute;top:2px;right:4px;font-size:.6rem;color:var(--green);font-weight:700;}
+.nc.solved .nc-d{color:var(--green);}
+.nc.solved .nc-w{color:#006633;}
+.nc.active .nc-d{color:var(--gold);}
+.nc.active .nc-w{color:var(--gold-dim);}
+
+/* ── CHALLENGE STRIP ── */
+.strip{
+  background:var(--bg2);border-radius:5px;padding:6px 14px;
+  border:2px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;gap:10px;flex-shrink:0;
+}
+.st-word{font-size:1.8rem;font-weight:700;color:var(--white);letter-spacing:.15em;flex:0 0 auto;}
+.st-res{font-size:2rem;font-weight:700;min-width:54px;text-align:right;flex-shrink:0;}
+.st-res.ok {color:var(--green);}
+.st-res.bad{color:var(--red);}
+.st-res.dim{color:#555;}
+
+/* ── LETTER STEPPERS ── */
+.ltrs-area{flex:1;display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:0;padding:0 2px;}
+.ltrs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;}
+.lc{
+  display:flex;flex-direction:column;align-items:center;
+  background:var(--bg2);border:2px solid #335588;
+  border-radius:8px;overflow:hidden;min-width:0;
+}
+.lc-empty{visibility:hidden;}
+.lc-repeat{border-color:#335588;background:var(--bg2);}
+.lbtns-empty{flex:1;min-height:0;border-top:2px solid var(--border);}
+.lc.hi{border-color:var(--gold);background:#1a1500;}
+.ll{
+  font-size:1.35rem;font-weight:700;color:var(--dim);
+  line-height:1;padding:6px 0 4px;width:100%;text-align:center;
+  background:#1a1a1a;border-bottom:2px solid var(--border);
+  letter-spacing:.05em;
+}
+.lc.hi .ll{color:var(--gold);}
+.lc-repeat .ll{color:#888;}
+.lv{
+  font-size:2.2rem;font-weight:700;color:var(--gold);
+  line-height:1;padding:8px 0 6px;width:100%;text-align:center;
+  flex:1;display:flex;align-items:center;justify-content:center;
+}
+.lc-repeat .lv{color:#888;}
+.lbtns{display:flex;width:100%;border-top:2px solid var(--border);}
+.sb{
+  flex:1;font-size:1.8rem;font-weight:700;
+  color:#88aaff;background:var(--bg3);border:none;
+  cursor:pointer;padding:0;line-height:1;
+  min-height:54px;display:flex;align-items:center;justify-content:center;
+  transition:background .1s,color .1s;
+}
+.sb:first-child{border-right:2px solid var(--border);}
+.sb:active,.sb.pressing{background:#224;color:var(--white);}
+.lc.hi .sb{color:var(--gold-dim);background:var(--bg3);}
+.lc.hi .sb:active,.lc.hi .sb.pressing{color:var(--gold);background:#2a2000;}
+
+/* ── SIGNATURE ── */
+.sig{
+  text-align:center;font-size:.75rem;font-weight:700;
+  color:#555;padding:3px 0 4px;flex-shrink:0;letter-spacing:.04em;
+}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-70px);
+  background:#111;border:2px solid var(--border);
+  color:var(--white);font-family:Arial,sans-serif;font-size:1rem;font-weight:700;
+  padding:8px 20px;border-radius:6px;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  z-index:900;white-space:nowrap;pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok  {border-color:var(--green);color:var(--green);}
+.toast.bad {border-color:var(--red);color:var(--red);}
+.toast.info{border-color:#88aaff;color:#88aaff;}
+
+/* ── OVERLAYS ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:800;align-items:center;justify-content:center;}
+.overlay.show{display:flex;}
+.ovc{
+  background:var(--bg2);border:2px solid var(--border);
+  border-radius:8px;padding:28px 24px;text-align:center;
+  max-width:340px;width:90%;
+}
+.ov-t{font-size:1.8rem;font-weight:700;color:var(--white);margin-bottom:8px;}
+.ov-s{font-size:4.5rem;font-weight:700;color:var(--gold);line-height:1;margin:12px 0;}
+.ov-m{font-size:1rem;font-weight:700;color:var(--dim);line-height:1.6;margin-bottom:20px;white-space:pre-line;}
+.btn-ok{
+  font-family:Arial,sans-serif;font-size:1rem;font-weight:700;
+  letter-spacing:.05em;padding:10px 16px;border-radius:5px;
+  border:2px solid var(--green);color:var(--green);
+  cursor:pointer;background:transparent;
+}
+.btn-ok:active{background:#002a10;}
+.btn-ok:focus{outline:2px solid var(--green);}
+
+/* ── RULES ── */
+.rules-body{text-align:left;margin-bottom:20px;}
+.rules-body p{font-size:1.05rem;font-weight:700;color:var(--white);line-height:1.6;margin-bottom:10px;}
+.rules-body p:last-child{margin-bottom:0;}
+.rh{color:var(--gold);}
+
+/* ── PSEUDO OVERLAY ── */
+#pseudoOverlay .ovc{max-width:320px;}
+.pseudo-label{font-size:1rem;font-weight:700;color:var(--dim);margin-bottom:10px;display:block;text-align:left;}
+.pseudo-input{
+  width:100%;font-family:Arial,sans-serif;font-size:1.4rem;font-weight:700;
+  background:#000;border:2px solid var(--border);
+  border-radius:6px;color:var(--white);padding:10px 14px;outline:none;
+}
+.pseudo-input:focus{border-color:var(--gold);}
+.pseudo-btn{
+  margin-top:14px;width:100%;font-family:Arial,sans-serif;font-size:1.1rem;font-weight:700;
+  letter-spacing:.05em;padding:12px;border-radius:5px;
+  border:2px solid var(--gold);color:var(--gold);
+  cursor:pointer;background:#1a1500;
+}
+.pseudo-btn:active{background:#2a2000;}
+.pseudo-btn:focus{outline:2px solid var(--gold);}
+
+/* ── LEADERBOARD ── */
+#lbOverlay .ovc{max-width:400px;padding:20px 18px;text-align:left;}
+.lb-title{font-size:1.6rem;font-weight:700;color:var(--white);text-align:center;margin-bottom:14px;}
+.lb-list{min-height:160px;max-height:52vh;overflow-y:auto;}
+.lb-row{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #333;}
+.lb-rank{font-size:1.1rem;font-weight:700;color:#777;width:28px;text-align:right;flex-shrink:0;}
+.lb-rank.gold  {color:#ffd700;}
+.lb-rank.silver{color:#cccccc;}
+.lb-rank.bronze{color:#cc7733;}
+.lb-pseudo{flex:1;font-size:1.2rem;font-weight:700;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-score{font-size:1.5rem;font-weight:700;color:var(--gold);width:32px;text-align:right;flex-shrink:0;}
+.lb-date{font-size:.8rem;font-weight:700;color:var(--dim);flex-shrink:0;text-align:right;line-height:1.4;}
+.lb-empty{font-size:1rem;font-weight:700;color:#777;text-align:center;padding:40px 0;}
+.lb-loading{font-size:1rem;font-weight:700;color:#777;text-align:center;padding:40px 0;animation:pulse 1.2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+.lb-footer{margin-top:12px;display:flex;justify-content:center;}
+.lb-unconfigured{font-size:.9rem;font-weight:700;color:var(--red);text-align:center;padding:30px 10px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 onclick="openRules()" title="Règles du jeu">Le Jeu du 15</h1>
+  <div class="score-block">
+    <span class="lbl">SCORE</span>
+    <span class="val" id="scv">0</span>
+  </div>
+  <div class="hdr-btns">
+    <button class="hbtn lb"    onclick="openLeaderboard()" title="Classement">🏆</button>
+    <button class="hbtn"       id="btnFs" onclick="toggleFullscreen()" title="Plein écran">⛶</button>
+    <button class="hbtn share" onclick="shareSnapshot()" title="Partager">⬆</button>
+    <button class="hbtn rst"   onclick="confirmReset()" title="Réinitialiser">↺</button>
+  </div>
+</div>
+
+<div class="board" id="board">
+  <div class="nums-grid" id="numGrid"></div>
+  <div class="strip">
+    <div class="st-word" id="stWord">—</div>
+    <div class="st-res dim" id="stRes">?</div>
+  </div>
+  <div class="ltrs-area" id="ltrsArea"></div>
+</div>
+
+<div class="sig">Un jeu inventé par Sébastien Dumortier · mars 2026</div>
+
+<!-- End-of-game overlay -->
+<div class="overlay" id="overlay">
+  <div class="ovc">
+    <div class="ov-t" id="ovT">Partie terminée</div>
+    <div class="ov-s" id="ovS">0</div>
+    <div class="ov-m" id="ovM"></div>
+    <button class="btn-ok" style="width:100%" onclick="resetGame()">↺ Rejouer</button>
+  </div>
+</div>
+
+<!-- Rules overlay -->
+<div class="overlay" id="rulesOverlay">
+  <div class="ovc">
+    <div class="ov-t">Comment jouer ?</div>
+    <div class="rules-body">
+      <p>Attribuez une valeur entière à chaque lettre de l'alphabet.</p>
+      <p>Le but : que la somme des lettres de chaque mot soit égale au nombre qu'il représente.</p>
+      <p><span class="rh">ZERO</span> doit valoir 0, <span class="rh">UN</span> doit valoir 1… jusqu'à <span class="rh">QUINZE</span> = 15.</p>
+      <p>Le score est la plus longue chaîne consécutive depuis ZÉRO.</p>
+    </div>
+    <button class="btn-ok" style="width:100%" onclick="closeRules()">C'est parti !</button>
+  </div>
+</div>
+
+<!-- Pseudo overlay -->
+<div class="overlay" id="pseudoOverlay">
+  <div class="ovc">
+    <div class="ov-t">Le Jeu du 15</div>
+    <div class="ov-m" style="margin-bottom:16px">Entrez votre pseudo pour apparaître dans le classement.</div>
+    <label class="pseudo-label" for="pseudoInput">Votre pseudo</label>
+    <input class="pseudo-input" id="pseudoInput" type="text" maxlength="20" placeholder="ex: Sébastien" autocomplete="off">
+    <button class="pseudo-btn" onclick="savePseudo()">Jouer →</button>
+  </div>
+</div>
+
+<!-- Leaderboard overlay -->
+<div class="overlay" id="lbOverlay">
+  <div class="ovc">
+    <div class="lb-title">🏆 Classement</div>
+    <div class="lb-list" id="lbList"></div>
+    <div class="lb-footer">
+      <button class="btn-ok" onclick="closeLb()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  ⚙️  CONFIGURATION JSONBIN
+// ════════════════════════════════════════════════
+const JSONBIN_BIN_ID  = '69aca1ec43b1c97be9bee075';
+const JSONBIN_API_KEY = '$2a$10$KF8MxpCoz7EiaFpfywvUvel.9yrVRPB.gl670nIVTkj1qJ7MtVor6';
+const JSONBIN_URL     = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+const JSONBIN_CONFIGURED = JSONBIN_BIN_ID !== 'VOTRE_BIN_ID_ICI';
+
+// ════════════════════════════════════════════════
+const WORDS = ["ZERO","UN","DEUX","TROIS","QUATRE","CINQ","SIX","SEPT",
+               "HUIT","NEUF","DIX","ONZE","DOUZE","TREIZE","QUATORZE","QUINZE"];
+const ALL_LTRS = [...new Set(WORDS.join('').split(''))].sort();
+
+let vals = {};
+let solved = [];
+let active = 0;
+let gameOver = false;
+let lastScore = 0;
+
+// ── PSEUDO ────────────────────────────────────────
+const LS_PSEUDO = 'jeu15_pseudo';
+function getPseudo() {
+  try { return localStorage.getItem(LS_PSEUDO) || ''; } catch(e) { return ''; }
+}
+function savePseudo() {
+  const val = (document.getElementById('pseudoInput').value || '').trim();
+  if (!val) { document.getElementById('pseudoInput').focus(); return; }
+  try { localStorage.setItem(LS_PSEUDO, val); } catch(e) {}
+  document.getElementById('pseudoOverlay').classList.remove('show');
+  startGame();
+}
+
+// ── INIT ──────────────────────────────────────────
+function init() {
+  const pseudo = getPseudo();
+  if (!pseudo) {
+    document.getElementById('pseudoOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('pseudoInput').focus(), 400);
+  } else {
+    startGame();
+  }
+}
+function startGame() {
+  ALL_LTRS.forEach(l => vals[l] = 0);
+  solved = new Array(16).fill(false);
+  active = 0; gameOver = false; lastScore = 0;
+  buildNums(); revalidateAll(); refresh();
+}
+
+// ── NUMBER CARDS ──────────────────────────────────
+function buildNums() {
+  const g = document.getElementById('numGrid');
+  g.innerHTML = '';
+  WORDS.forEach((w, i) => {
+    const d = document.createElement('div');
+    d.className = 'nc'; d.id = `nc${i}`;
+    d.setAttribute('role','button');
+    d.setAttribute('aria-label', `${w} (${i})`);
+    d.innerHTML = `<span class="nc-d">${i}</span><span class="nc-w">${w}</span>`;
+    d.onclick = () => { if (!gameOver) { active = i; refresh(); } };
+    g.appendChild(d);
+  });
+}
+
+// ── LETTER STEPPERS ───────────────────────────────
+function buildLetters(word) {
+  const area = document.getElementById('ltrsArea');
+  area.innerHTML = '';
+  const seen = {};
+  const slots = word.split('').map(l => {
+    const n = (seen[l] = (seen[l]||0) + 1);
+    return { l, first: n === 1 };
+  });
+  const rows = [];
+  for (let i = 0; i < slots.length; i += 4) rows.push(slots.slice(i, i+4));
+  rows.forEach(row => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'ltrs-row';
+    row.forEach(({l, first}) => {
+      const c = document.createElement('div');
+      c.className = 'lc' + (first ? '' : ' lc-repeat');
+      if (first) c.id = `lc_${l}`;
+      if (first) {
+        c.innerHTML =
+          `<span class="ll">${l}</span>` +
+          `<span class="lv" id="lv_${l}">${vals[l]}</span>` +
+          `<div class="lbtns">` +
+            `<button class="sb" id="sb_m_${l}" aria-label="Diminuer ${l}">−</button>` +
+            `<button class="sb" id="sb_p_${l}" aria-label="Augmenter ${l}">+</button>` +
+          `</div>`;
+      } else {
+        c.innerHTML =
+          `<span class="ll">${l}</span>` +
+          `<span class="lv" id="lv_rep_${l}_${Math.random().toString(36).slice(2)}">${vals[l]}</span>` +
+          `<div class="lbtns lbtns-empty"></div>`;
+      }
+      rowEl.appendChild(c);
+    });
+    for (let p = row.length; p < 4; p++) {
+      const ph = document.createElement('div'); ph.className = 'lc lc-empty'; rowEl.appendChild(ph);
+    }
+    area.appendChild(rowEl);
+  });
+  [...new Set(word.split(''))].forEach(l => {
+    attachStep(document.getElementById(`sb_m_${l}`), l, -1);
+    attachStep(document.getElementById(`sb_p_${l}`), l, +1);
+  });
+}
+
+let stepTimer=null, stepIval=null;
+function attachStep(btn, l, dir) {
+  const start = e => {
+    e.preventDefault(); btn.classList.add('pressing');
+    applyStep(l, dir);
+    stepTimer = setTimeout(() => { stepIval = setInterval(() => applyStep(l, dir), 75); }, 320);
+  };
+  const stop = () => {
+    btn.classList.remove('pressing');
+    clearTimeout(stepTimer); clearInterval(stepIval); stepTimer=stepIval=null;
+  };
+  btn.addEventListener('pointerdown', start);
+  btn.addEventListener('pointerup',   stop);
+  btn.addEventListener('pointerleave',stop);
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+}
+function applyStep(l, dir) {
+  vals[l] = (vals[l]??0) + dir;
+  const lv = document.getElementById(`lv_${l}`);
+  if (lv) lv.textContent = vals[l];
+  document.querySelectorAll(`[id^="lv_rep_${l}_"]`).forEach(el => el.textContent = vals[l]);
+  revalidateAll(); refreshStrip(); refreshCards();
+  const score = calcScore();
+  document.getElementById('scv').textContent = score;
+  if (score > lastScore) { lastScore = score; maybeSubmitToJsonbin(score); }
+}
+function stopStep() { clearTimeout(stepTimer); clearInterval(stepIval); stepTimer=stepIval=null; }
+
+// ── CORE LOGIC ────────────────────────────────────
+function wsum(word) {
+  let s=0;
+  for (const c of word) { if (vals[c]===undefined||vals[c]===null) return null; s+=vals[c]; }
+  return s;
+}
+function revalidateAll() {
+  for (let i=0;i<16;i++) solved[i]=(wsum(WORDS[i])===i);
+  if (!gameOver && solved.every(Boolean)) endGame();
+}
+function calcScore() {
+  let s=0;
+  for (let i=0;i<16;i++) { if(solved[i]) s=i+1; else break; }
+  return s;
+}
+
+// ── REFRESH ───────────────────────────────────────
+function refresh() {
+  buildLetters(WORDS[active]);
+  refreshCards(); refreshStrip();
+  document.getElementById('scv').textContent = calcScore();
+}
+function refreshCards() {
+  for (let i=0;i<16;i++) {
+    const c=document.getElementById(`nc${i}`); if(!c) continue;
+    c.className='nc'+(solved[i]?' solved':'')+(i===active?' active':'');
+    const old=c.querySelector('.nc-ck'); if(old) old.remove();
+    if(solved[i]){const ck=document.createElement('span');ck.className='nc-ck';ck.textContent='✓';c.appendChild(ck);}
+  }
+}
+function refreshStrip() {
+  const word=WORDS[active], s=wsum(word);
+  document.getElementById('stWord').textContent=word;
+  const res=document.getElementById('stRes');
+  if(s===null){res.textContent='?';res.className='st-res dim';}
+  else if(s===active){res.textContent='= '+s;res.className='st-res ok';}
+  else{res.textContent=s;res.className='st-res bad';}
+}
+
+// ── END GAME ──────────────────────────────────────
+function endGame() {
+  gameOver=true;
+  const score=calcScore();
+  document.getElementById('ovT').textContent=score===16?'🏆 Parfait !':'Partie terminée !';
+  document.getElementById('ovS').textContent=score+' pt'+(score!==1?'s':'');
+  const sw=WORDS.filter((_,i)=>solved[i]);
+  let msg=score===16?'Tous les 16 nombres résolus !\nBravo !'
+    :score===0?'ZÉRO non validé — aucun point.\nRéussis hors chaîne : '+(sw.join(', ')||'aucun')
+    :`Chaîne : ZÉRO → ${WORDS[score-1]}\nRéussis au total : ${sw.join(', ')}`;
+  document.getElementById('ovM').textContent=msg;
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ════════════════════════════════════════════════
+//  LOCAL BEST + JSONBIN LEADERBOARD
+// ════════════════════════════════════════════════
+const LS_KEY = 'jeu15_best';
+function getLocalBest() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {score:0}; }
+  catch(e) { return {score:0}; }
+}
+function setLocalBest(obj) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); } catch(e) {}
+}
+
+async function maybeSubmitToJsonbin(score) {
+  const pseudo = getPseudo();
+  if (!pseudo || !JSONBIN_CONFIGURED) return;
+  const best = getLocalBest();
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const entry = {
+    pseudo, score,
+    date: `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`,
+    time: `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+    ts: now.getTime()
+  };
+  if (score > best.score) setLocalBest(entry);
+  try {
+    const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
+    const data = await res.json();
+    const scores = data.record?.scores ?? [];
+    const sorted = [...scores].sort((a,b) => b.score - a.score);
+    const lowestTop = sorted.length < 5 ? 0 : sorted[4].score;
+    if (score <= lowestTop) return;
+    scores.push(entry);
+    scores.sort((a,b) => b.score - a.score || a.ts - b.ts);
+    scores.splice(5);
+    await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
+      body: JSON.stringify({ scores })
+    });
+  } catch(e) { console.error('Leaderboard error:', e); }
+}
+
+async function loadScores() {
+  const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
+  const data = await res.json();
+  return data.record?.scores ?? [];
+}
+
+// ════════════════════════════════════════════════
+//  LEADERBOARD UI
+// ════════════════════════════════════════════════
+function openLeaderboard() {
+  document.getElementById('lbOverlay').classList.add('show');
+  renderLb();
+}
+function closeLb() { document.getElementById('lbOverlay').classList.remove('show'); }
+
+async function renderLb() {
+  const list = document.getElementById('lbList');
+  if (!JSONBIN_CONFIGURED) { list.innerHTML=`<div class="lb-unconfigured">JSONBin non configuré.</div>`; return; }
+  list.innerHTML = `<div class="lb-loading">Chargement…</div>`;
+  try {
+    const scores = await loadScores();
+    if (!scores.length) { list.innerHTML=`<div class="lb-empty">Aucun score enregistré.</div>`; return; }
+    const rows = [...scores].sort((a,b) => b.score-a.score || a.ts-b.ts).slice(0,5);
+    const localBest = getLocalBest().score;
+    list.innerHTML = rows.map((r, i) => {
+      const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+      const isMe = r.score === localBest ? ' style="background:#1a1500"' : '';
+      return `<div class="lb-row"${isMe}>
+        <span class="lb-rank ${rankClass}">${medal}</span>
+        <span class="lb-pseudo">${escHtml(r.pseudo)}</span>
+        <span class="lb-score">${r.score}</span>
+        <span class="lb-date">${r.date??''}<br>${r.time??''}</span>
+      </div>`;
+    }).join('');
+    const localInTop = rows.some(r => r.score === localBest);
+    if (localBest > 0 && !localInTop) {
+      list.innerHTML += `<div class="lb-row" style="margin-top:8px;border-top:2px solid #333;padding-top:10px">
+        <span class="lb-rank">—</span>
+        <span class="lb-pseudo" style="color:var(--gold)">Votre record local</span>
+        <span class="lb-score">${localBest}</span>
+        <span class="lb-date"></span>
+      </div>`;
+    }
+  } catch(e) { list.innerHTML=`<div class="lb-empty">Impossible de charger les scores.</div>`; }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── RULES ─────────────────────────────────────────
+function openRules() { document.getElementById('rulesOverlay').classList.add('show'); }
+function closeRules() { document.getElementById('rulesOverlay').classList.remove('show'); }
+
+// ── FULLSCREEN ────────────────────────────────────
+function toggleFullscreen() {
+  const btn=document.getElementById('btnFs');
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+    btn.textContent='✕'; btn.title='Quitter le plein écran';
+  } else {
+    document.exitFullscreen();
+    btn.textContent='⛶'; btn.title='Plein écran';
+  }
+}
+document.addEventListener('fullscreenchange',()=>{
+  const btn=document.getElementById('btnFs');
+  if(!document.fullscreenElement){btn.textContent='⛶';btn.title='Plein écran';}
+});
+
+// ── SHARE / SNAPSHOT ──────────────────────────────
+async function shareSnapshot() {
+  const pseudo = getPseudo();
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dateStr=`${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
+  const timeStr=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  showToast('Génération…','info');
+  await new Promise(r=>setTimeout(r,80));
+  try {
+    const score=calcScore();
+    const sw=WORDS.filter((_,i)=>solved[i]);
+    const total=sw.length, name=pseudo;
+    const W=640,H=480;
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+    const ctx=cv.getContext('2d');
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#111'; ctx.beginPath(); roundRect(ctx,16,16,W-32,H-32,12); ctx.fill();
+    ctx.strokeStyle='#333'; ctx.lineWidth=2; ctx.beginPath(); roundRect(ctx,16,16,W-32,H-32,12); ctx.stroke();
+    ctx.font='bold 28px Arial'; ctx.fillStyle='#ffffff';
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.fillText('LE JEU DU 15',W/2,58);
+    const px=60,py=76,pw=W-120,ph=name?210:188;
+    for(let i=2;i>=1;i--){
+      ctx.save(); ctx.shadowColor='rgba(255,215,0,0.5)'; ctx.shadowBlur=i*16;
+      ctx.strokeStyle=`rgba(255,215,0,${0.2*i})`; ctx.lineWidth=i*2;
+      ctx.beginPath(); roundRect(ctx,px-i*4,py-i*4,pw+i*8,ph+i*8,12+i*2); ctx.stroke(); ctx.restore();
+    }
+    const grad=ctx.createLinearGradient(px,py,px,py+ph);
+    grad.addColorStop(0,'rgba(255,215,0,0.15)'); grad.addColorStop(1,'rgba(255,215,0,0.04)');
+    ctx.fillStyle=grad; ctx.beginPath(); roundRect(ctx,px,py,pw,ph,12); ctx.fill();
+    ctx.strokeStyle='#ffd700'; ctx.lineWidth=2; ctx.beginPath(); roundRect(ctx,px,py,pw,ph,12); ctx.stroke();
+    let iy=py+44;
+    if(name){
+      ctx.font='bold 32px Arial'; ctx.fillStyle='#ffffff';
+      ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.fillText(name,W/2,iy); iy+=46;
+    }
+    ctx.save(); ctx.shadowColor='rgba(255,215,0,0.8)'; ctx.shadowBlur=24;
+    ctx.font='bold 88px Arial'; ctx.fillStyle='#ffd700';
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.fillText(score,W/2,iy+72); ctx.restore();
+    ctx.font='bold 16px Arial'; ctx.fillStyle='rgba(255,215,0,0.6)';
+    ctx.fillText('SCORE',W/2,iy+98); iy+=112;
+    ctx.strokeStyle='rgba(255,215,0,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(px+40,iy); ctx.lineTo(px+pw-40,iy); ctx.stroke(); iy+=22;
+    ctx.font='bold 20px Arial'; ctx.fillStyle='#ffffff';
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic'; ctx.fillText(`${dateStr}  ·  ${timeStr}`,W/2,iy);
+    const gy=py+ph+22, gw=(W-80)/16;
+    WORDS.forEach((_,i)=>{
+      const x=40+i*gw;
+      ctx.fillStyle=solved[i]?'rgba(0,230,118,0.2)':'rgba(255,255,255,0.04)';
+      ctx.strokeStyle=solved[i]?'#00e676':'#444';
+      ctx.lineWidth=1.5; ctx.beginPath(); roundRect(ctx,x+1,gy,gw-3,26,3); ctx.fill(); ctx.stroke();
+      ctx.font='bold 10px Arial'; ctx.fillStyle=solved[i]?'#00e676':'#555';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(i,x+gw/2,gy+13);
+    });
+    ctx.font='bold 13px Arial'; ctx.fillStyle='#555';
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.fillText(`${total} nombre${total>1?'s':''} trouvé${total>1?'s':''}  ·  Sébastien Dumortier  ·  mars 2026`,W/2,H-22);
+    cv.toBlob(async blob=>{
+      if(!blob){showToast('Erreur','bad');return;}
+      const fname=`jeu-du-15_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
+      const file=new File([blob],fname,{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        try{await navigator.share({files:[file],title:'Le Jeu du 15',text:`Score : ${score} — Jeu du 15`});return;}catch(e){}
+      }
+      const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download=fname; a.click(); setTimeout(()=>URL.revokeObjectURL(url),3000);
+      showToast('Image enregistrée !','ok');
+    },'image/png');
+  } catch(e){showToast('Partage non disponible','bad');console.error(e);}
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+}
+
+// ── TOAST ─────────────────────────────────────────
+let toastTm;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+type;
+  clearTimeout(toastTm); toastTm=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── RESET ─────────────────────────────────────────
+function confirmReset(){if(confirm('Réinitialiser la partie ?'))resetGame();}
+function resetGame(){
+  stopStep(); document.getElementById('overlay').classList.remove('show');
+  lastScore = 0; startGame();
+}
+
+document.getElementById('pseudoInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') savePseudo();
+});
+
+init();
+</script>
+</body>
+</html>
