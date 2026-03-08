@@ -56,21 +56,21 @@
   {
     "src": "./1.jpg",
     "sizes": "1080x2392",
-    "type": "image/jpg",
+    "type": "image/jpeg",
     "form_factor": "narrow",
     "label": "Un score déjà pas mal !"
   },
   {
     "src": "./2.jpg",
     "sizes": "1080x2392",
-    "type": "image/jpg",
+    "type": "image/jpeg",
     "form_factor": "narrow",
     "label": "Le début"
   },
   {
     "src": "./3.jpg",
     "sizes": "1080x2392",
-    "type": "image/jpg",
+    "type": "image/jpeg",
     "form_factor": "narrow",
     "label": "Système de scores mondial"
   },
@@ -84,7 +84,7 @@
   {
     "src": "./5.jpg",
     "sizes": "1080x2392",
-    "type": "image/jpg",
+    "type": "image/jpeg",
     "form_factor": "narrow",
     "label": "Des règles simples"
   }
