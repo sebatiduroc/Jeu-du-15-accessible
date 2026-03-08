@@ -17,8 +17,5 @@
     "entertainment",
     "games",
     "kids"
-  ],
-  "share_target": {
-    "method": "GET"
-  }
+  ]
 }
