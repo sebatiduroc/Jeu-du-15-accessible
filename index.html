@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Le Jeu du 15 — Version accessible</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffd700">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jeu du 15">
+<link rel="apple-touch-icon" href="pwa-icons/icon-192.png">
 <style>
 /* ══════════════════════════════════════════════════
    ACCESSIBILITÉ : sans serif, pas d'italique,
@@ -709,6 +715,11 @@ function resetGame(){
 document.getElementById('pseudoInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') savePseudo();
 });
+
+// Enregistrement du Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 
 init();
 </script>
