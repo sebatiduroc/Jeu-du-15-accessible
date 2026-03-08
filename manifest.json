@@ -4,9 +4,9 @@
   "display": "standalone",
   "name": "Le Jeu du 15",
   "orientation": "portrait",
-  "scope": "./",
+  "scope": "/Jeu-du-15-accessible/",
   "short_name": "Jeu15",
-  "start_url": "./",
+  "start_url": "/Jeu-du-15-accessible/"
   "theme_color": "#ffd700",
   "id": "Jeu du 15",
   "description": "Le Jeu du 15 : attribuez une valeur entière à chaque lettre de l'alphabet pour que la somme des lettres de chaque mot soit égale au nombre qu'il représente, de ZÉRO à QUINZE.\nLe jeu est adapté aux personnes malvoyantes, avec des contrastes élevés, et des polices agrandies.",
