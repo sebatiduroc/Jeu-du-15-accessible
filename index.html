@@ -110,19 +110,19 @@ body{
 .pseudo-input:focus{border-color:var(--gold);}
 .pseudo-btn{margin-top:14px;width:100%;font-family:Arial,sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.05em;padding:12px;border-radius:5px;border:2px solid var(--gold);color:var(--gold);cursor:pointer;background:#1a1500;}
 .pseudo-btn:active{background:#2a2000;} .pseudo-btn:focus{outline:2px solid var(--gold);}
-#lbOverlay .ovc{max-width:400px;padding:20px 18px;text-align:left;}
-.lb-title{font-size:1.6rem;font-weight:700;color:var(--white);text-align:center;margin-bottom:14px;}
-.lb-list{min-height:160px;max-height:52vh;overflow-y:auto;}
-.lb-row{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #333;}
-.lb-rank{font-size:1.1rem;font-weight:700;color:#777;width:28px;text-align:right;flex-shrink:0;}
+#lbOverlay .ovc{max-width:400px;padding:16px 14px;text-align:left;}
+.lb-title{font-size:1.4rem;font-weight:700;color:var(--white);text-align:center;margin-bottom:10px;}
+.lb-list{max-height:70vh;overflow-y:auto;}
+.lb-row{display:flex;align-items:center;gap:6px;padding:5px 2px;border-bottom:1px solid #2a2a2a;}
+.lb-rank{font-size:.85rem;font-weight:700;color:#777;width:22px;text-align:right;flex-shrink:0;}
 .lb-rank.gold{color:#ffd700;} .lb-rank.silver{color:#cccccc;} .lb-rank.bronze{color:#cc7733;}
-.lb-pseudo{flex:1;font-size:1.2rem;font-weight:700;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.lb-score{font-size:1.5rem;font-weight:700;color:var(--gold);width:32px;text-align:right;flex-shrink:0;}
-.lb-date{font-size:.8rem;font-weight:700;color:var(--dim);flex-shrink:0;text-align:right;line-height:1.4;}
+.lb-pseudo{flex:1;font-size:.95rem;font-weight:700;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-score{font-size:1.15rem;font-weight:700;color:var(--gold);width:26px;text-align:right;flex-shrink:0;}
+.lb-date{font-size:.68rem;font-weight:700;color:var(--dim);flex-shrink:0;text-align:right;line-height:1.3;}
 .lb-empty{font-size:1rem;font-weight:700;color:#777;text-align:center;padding:40px 0;}
 .lb-loading{font-size:1rem;font-weight:700;color:#777;text-align:center;padding:40px 0;animation:pulse 1.2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
-.lb-footer{margin-top:12px;display:flex;justify-content:center;}
+.lb-footer{margin-top:10px;display:flex;justify-content:center;}
 .lb-unconfigured{font-size:.9rem;font-weight:700;color:var(--red);text-align:center;padding:30px 10px;line-height:1.5;}
 </style>
 </head>
@@ -209,6 +209,9 @@ const JSONBIN_CONFIGURED = JSONBIN_BIN_ID !== 'VOTRE_BIN_ID_ICI';
 // Durée de rétention des scores : 30 jours
 const SCORE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
+// Nombre maximum d'entrées dans le classement
+const MAX_LEADERBOARD_ENTRIES = 20;
+
 // ════════════════════════════════════════════════
 const WORDS = ["ZERO","UN","DEUX","TROIS","QUATRE","CINQ","SIX","SEPT",
                "HUIT","NEUF","DIX","ONZE","DOUZE","TREIZE","QUATORZE","QUINZE"];
@@ -222,9 +225,6 @@ let lastScore = 0;
 
 // ════════════════════════════════════════════════
 //  IDENTITÉ JOUEUR : pseudo + UUID invisible
-//  L'UUID est généré une seule fois et stocké
-//  en localStorage. Deux joueurs peuvent avoir
-//  le même pseudo, mais jamais le même UUID.
 // ════════════════════════════════════════════════
 const LS_PSEUDO = 'jeu15_pseudo';
 const LS_UUID   = 'jeu15_uuid';
@@ -250,7 +250,7 @@ function savePseudo() {
   const val = (document.getElementById('pseudoInput').value || '').trim();
   if (!val) { document.getElementById('pseudoInput').focus(); return; }
   try { localStorage.setItem(LS_PSEUDO, val); } catch(e) {}
-  getUUID(); // s'assurer que l'UUID est créé dès la première saisie
+  getUUID();
   document.getElementById('pseudoOverlay').classList.remove('show');
   startGame();
 }
@@ -425,7 +425,6 @@ function setLocalBest(obj) {
   try { localStorage.setItem(LS_KEY, JSON.stringify(obj)); } catch(e) {}
 }
 
-// Retourne les scores récents (moins de 30 jours) depuis JSONBin
 async function loadScores() {
   const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
   const data = await res.json();
@@ -434,7 +433,6 @@ async function loadScores() {
   return scores.filter(r => r.ts && r.ts >= cutoff);
 }
 
-// Appelée à chaque amélioration de score pendant la partie
 async function maybeSubmitToJsonbin(score) {
   const pseudo = getPseudo();
   const uid = getUUID();
@@ -456,7 +454,6 @@ async function maybeSubmitToJsonbin(score) {
     const data = await res.json();
     const allScores = data.record?.scores ?? [];
 
-    // Purger les scores de plus de 30 jours
     const cutoff = Date.now() - SCORE_RETENTION_MS;
     const fresh = allScores.filter(r => r.ts && r.ts >= cutoff);
 
@@ -464,21 +461,24 @@ async function maybeSubmitToJsonbin(score) {
     const idx = fresh.findIndex(r => r.uid === uid);
     if (idx !== -1) {
       if (score > fresh[idx].score) {
-        fresh[idx] = entry; // amélioration : on met à jour
+        fresh[idx] = entry;
       } else {
-        return; // pas d'amélioration, on n'écrit pas
+        return;
       }
     } else {
-      fresh.push(entry); // nouveau joueur
+      fresh.push(entry);
     }
 
-    // Tri par score décroissant, sans limite de nombre d'entrées
+    // Tri par score décroissant
     fresh.sort((a,b) => b.score - a.score || a.ts - b.ts);
+
+    // Limiter à MAX_LEADERBOARD_ENTRIES entrées
+    const trimmed = fresh.slice(0, MAX_LEADERBOARD_ENTRIES);
 
     await fetch(JSONBIN_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
-      body: JSON.stringify({ scores: fresh })
+      body: JSON.stringify({ scores: trimmed })
     });
   } catch(e) { console.error('Leaderboard error:', e); }
 }
@@ -501,13 +501,11 @@ async function renderLb() {
     if (!scores.length) { list.innerHTML=`<div class="lb-empty">Aucun score enregistré.</div>`; return; }
 
     const myUid = getUUID();
-    // Tri par score décroissant, toutes entrées affichées (pas de limite)
     const rows = [...scores].sort((a,b) => b.score-a.score || a.ts-b.ts);
 
     list.innerHTML = rows.map((r, i) => {
       const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
       const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-      // Mise en surbrillance de la ligne du joueur actuel via son UUID
       const isMe = r.uid === myUid ? ' style="background:#1a1500"' : '';
       return `<div class="lb-row"${isMe}>
         <span class="lb-rank ${rankClass}">${medal}</span>
@@ -517,7 +515,6 @@ async function renderLb() {
       </div>`;
     }).join('');
 
-    // Si le joueur local n'est pas encore dans le classement distant
     const localBest = getLocalBest().score;
     const meInList = rows.some(r => r.uid === myUid);
     if (localBest > 0 && !meInList) {
@@ -654,7 +651,6 @@ document.getElementById('pseudoInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') savePseudo();
 });
 
-// Enregistrement du Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
